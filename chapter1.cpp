@@ -12,6 +12,7 @@ class thread_guard {
     std::thread& t;
 public:
     explicit thread_guard(std::thread& t_) :t(t_) {}
+    //explicit将不允许进行隐式转换
     ~thread_guard() {
         if (t.joinable()) {
             std::cout << "wait thread...\n";

@@ -3,16 +3,6 @@
 //条件竞争(race condition)
 //软件事务内存 STM
 
-#include <list>
-#include <stack>
-#include <queue>
-#include <map>
-#include <mutex> //mutex,lock_guard,lock,scoped_lock
-#include <shared_mutex> //c++14,c++17 
-#include <exception> //异常处理
-#include <memory>
-#include <algorithm>
-
 std::list<int> list1;
 std::mutex mutex1;
 //互斥访问的量 可理解为锁 在任意时刻最多允许一个线程对其进行上锁

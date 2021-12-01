@@ -8,6 +8,17 @@
 #include <utility>      //forward
 #include <stdarg.h>     //... var
 
+#include <list>
+#include <stack>
+#include <queue>
+#include <map>
+#include <mutex> //mutex,lock_guard,lock,scoped_lock
+#include <shared_mutex> //c++14,c++17 
+#include <exception> //异常处理
+#include <memory>
+#include <algorithm>
+
+
 using Ulong = unsigned long;
 
 int plus(int a, int b) { return a + b; }
