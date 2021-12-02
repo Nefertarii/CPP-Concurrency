@@ -1,6 +1,7 @@
 #include "headfile.h"
 
 #include <condition_variable> 
+#include <future> //async future
 
 using Ms = std::chrono::microseconds;
 using Sec = std::chrono::seconds;
@@ -46,7 +47,7 @@ void data_processing_thread() {
             done_flag = true;
             preocess_done.notify_one();
             break;
-        } 
+        }
     }
 }
 void func1() {
@@ -152,6 +153,144 @@ public:
     //保证线程安全,禁止了简单赋值
 };
 
+int find_some() {
+    std::cout << "find for future...\n";
+    sleep(1);
+    std::cout << "answer is 42!\n";
+    return 42;
+}
+void func2() {
+    std::future<int> answer = std::async(find_some);
+    sleep(2);
+    std::cout << "future return " << answer.get() << "\n";
+}
+
+struct X {
+    X() { std::cout << "X construct.\n"; }
+    X(X&&) { std::cout << "X copy construct\n"; }
+    X(X const&) { std::cout << "X copy construct\n"; }
+    void foo(int n, std::string const& str) { std::cout << str << " " << n << "\n"; }
+    std::string bar(std::string const& str) {
+        std::cout << str << "\n";
+        return str;
+    }
+    X& operator=(X&&) {
+        std::cout << "X operator=\n";
+        return *this;
+    }
+    X& operator=(X const&) {
+        std::cout << "X operator=\n";
+        return *this;
+    }
+    //类中的拷贝和拷贝构造等都省略了copy操作
+};
+struct Y {
+    Y() { std::cout << "Y construct.\n"; }
+    Y(Y&&) { std::cout << "Y copy construct\n"; }
+    Y(Y const&) { std::cout << "Y copy construct\n"; }
+    double operator()(double d) {
+        std::cout << "operator() get double:" << d << "\n";
+        return d;
+    }
+    Y& operator=(Y&&) {
+        std::cout << "Y operator=\n";
+        return *this;
+    }
+    Y& operator=(Y const&) {
+        std::cout << "Y operator=\n";
+        return *this;
+    }
+};
+X baz(X& x) {
+    std::cout << "copy X\n";
+    return x;
+};
+class move_only {
+public:
+    move_only() { std::cout << "move_only construct\n"; }
+    move_only(move_only&&) { std::cout << "move_only copy construct\n"; }
+    move_only(move_only const&) = delete;
+    move_only& operator=(move_only&&) {
+        return *this;
+    }
+    move_only& operator=(move_only const&) = delete;
+    void operator()() { std::cout << "move_only operator()\n"; }
+};
+X x;
+Y y;
+void func3() {
+    sleep(1);
+    auto f1 = std::async(&X::foo, &x, 42, "hello");
+    //调用了x->foo
+
+    sleep(1);
+    auto f2 = std::async(&X::bar, x, "goodbye");
+    //利用x的拷贝,调用了一个临时的x->bar
+    sleep(1);
+    std::cout << "f2 Got return:" << f2.get() << "\n";
+
+    sleep(1);
+    auto f3 = std::async(Y(), 3.1415);
+    //利用Y的移动构造函数,调用了一个临时的y(3.1415);
+    sleep(1);
+    std::cout << "f3 Got return:" << f3.get() << "\n";
+
+    sleep(1);
+    auto f4 = std::async(std::ref(y), 2.7182);
+    //调用了y(2.7182);
+    sleep(1);
+    std::cout << "f4 Got return:" << f4.get() << "\n";
+
+    sleep(1);
+    auto f5 = std::async(baz, std::ref(x));
+
+    sleep(1);
+    auto f6 = std::async(move_only());
+    //通过std::move(move_only()),调用了一个临时的move_only()
+}
+
+void func4() {
+    sleep(1);
+    auto f6 = std::async(std::launch::async, Y(), 1.2345);
+    auto f7 = std::async(std::launch::deferred, baz, std::ref(x));
+    sleep(1);
+    auto f8 = std::async(std::launch::deferred | std::launch::async, baz, std::ref(x));
+    //std::launch::async 表示函数必须保证异步行为，即传递函数将在单独的线程中执行
+    //std::launch::deferred 表示函数在wait()或get()调用时执行
+    //std::launch::deferred|std::launch::async 为默认情况,取决于系统的负载,且无法控制
+    sleep(1);
+    f7.wait();
+}
+
+/*std::mutex mtx;
+std::deque<std::packaged_task<void()>> tasks;
+bool gui_shutdown() {
+    
+}
+void process_gui_message();
+void gui_thread() {
+    while (!gui_shutdown()) {
+        process_gui_message();
+        std::packaged_task<void()> task;
+        {
+            std::lock_guard<std::mutex>lk(m);
+            if (tasks.empty()) { continue; }
+            task = std::move(tasks.front());
+            tasks.pop_front();
+        }
+        task();
+    }
+}
+std::this_thread gui_bg_thread(gui_thread);
+template<typename Func>
+std::future<void> post_task(Func f) {
+    std::packaged_task<void()> task(f);
+    std::future<void> res = task.get_future();
+    std::lock_guard<std::mutex> lk(m);
+    tasks.pop_back(std::move(task));
+    return res;
+}*/
+
 int main() {
-    func1();
+    func4();
 }

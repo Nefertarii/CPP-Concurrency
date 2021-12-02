@@ -12,9 +12,9 @@
 #include <stack>
 #include <queue>
 #include <map>
-#include <mutex> //mutex,lock_guard,lock,scoped_lock
-#include <shared_mutex> //c++14,c++17 
-#include <exception> //异常处理
+#include <mutex>        //mutex,lock_guard,lock,scoped_lock
+#include <shared_mutex> //only in c++14,c++17 
+#include <exception>    
 #include <memory>
 #include <algorithm>
 
