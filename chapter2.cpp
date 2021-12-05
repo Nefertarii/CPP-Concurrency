@@ -1,6 +1,6 @@
 #include "headfile.h"
-//数据共享操作 互斥量mutex 锁
-//条件竞争(race condition)
+//数据共享操作,互斥量mutex,锁的操作
+//条件竞争(race condition)情况
 //软件事务内存 STM(Software transactional memory)
 
 std::list<int> list1;

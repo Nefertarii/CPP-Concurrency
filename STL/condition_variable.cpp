@@ -35,7 +35,7 @@ void example1() {
         th.join();
 }
 
-//示例结尾
+
 
 //condition_variable有两种wait函数
 //void wait(unique_lock<mutex>& lck);
@@ -75,7 +75,7 @@ void example2() {
     }
     consumer_threads.join();
 }
-//示例结尾
+
 
 //condition_variable成员函数wait_for同样有两个
 //template <class Rep, class Period>

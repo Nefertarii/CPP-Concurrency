@@ -38,7 +38,7 @@ void example() {
     }
     std::cout << "successful increases of the counter " << counter << "\n";
 }
-//示例结尾
+
 
 //std::recursive_mutex mutex2; //可递归的mutex
 //recursive_mutex类的特性大致与mutex一致 但是允许同一线程对该mutex多次上锁
@@ -104,7 +104,7 @@ void example3() {
         th.join();
     }
 }
-//示例结尾
+
 //std::recursive_timed_mutex mutex4; //可定时可递归的mutex
 
 
@@ -137,7 +137,7 @@ void example4() {
         th.join();
     }
 }
-//示例结尾
+
 
 //std::unique_lock示例代码
 std::mutex mtx4;           //临界区的互斥锁
@@ -156,7 +156,7 @@ void example4() {
     th1.join();
     th2.join();
 }
-//示例结尾
+
 
 //在进行网络编程时，我们常常见到同步(Sync)/异步(Async)，阻塞(Block)/非阻塞(Unblock)四种调用方式：
 //同步：就是在发出一个功能调用时，在没有得到结果之前，该调用就不返回。也就是必须一件一件事做,等前一件做完了才能做下一件事。
