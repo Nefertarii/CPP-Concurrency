@@ -3,9 +3,6 @@
 //future使用
 //promise与future的搭配操作
 
-using Ms = std::chrono::microseconds;
-using Sec = std::chrono::seconds;
-
 bool flag1;
 std::mutex mtx1;
 void wait_for_sleep() {

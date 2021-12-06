@@ -8,7 +8,7 @@
 #include <utility>      //forward
 #include <stdarg.h>     //... var
 #include <condition_variable> 
-#include <future> //async future
+#include <future>       //async future
 
 #include <list>
 #include <stack>
@@ -23,6 +23,17 @@
 
 
 using Ulong = unsigned long;
+using Us = std::chrono::microseconds;
+using Ms = std::chrono::milliseconds;
+using Sec = std::chrono::seconds;
+using SysClock = std::chrono::system_clock;
+using HighClock = std::chrono::high_resolution_clock;
+using SteadyClock = std::chrono::steady_clock;
+template<typename Rep, typename Period>
+using Duration = std::chrono::duration<Rep, Period>;
+template<typename Clock, typename Duration>
+using TimePoint = std::chrono::time_point<Clock, Duration>;
+
 
 int plus(int a, int b) { return a + b; }
 double square(double x) {
