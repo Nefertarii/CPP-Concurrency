@@ -55,6 +55,32 @@ void func2() {
 //std::mutex和std::recursive_mutex都不支持超时锁,但是std::timed_mutex和std::recursive_timed_mutex支持
 //这两种类型也有try_lock_for()和try_lock_until()成员函数,可以在一段时期内尝试获取锁或在指定时间点前获取互斥锁
 
+//pure function 指函数对于相同的输入,永远会得到相同的输出,且没有太多副作用
+//函数化编程(FP) 中的函数结果只依赖于传入的参数,不依赖外部状态
+template<typename T>
+std::list<T> quick_sort1(std::list<T> input) {
+    if (input.empty()) { return input; }
+    std::list<T> result;
+    result.splice(result.begin(), input, input.begin());
+    //splice 可以将从一个 list 转移元素给另一个中,共有三种用法
+    //1(pos, other), 2(pos, other, it), 3(pos, other, it1, it2)
+    //1从list类型的other转移所有元素到 *this 中,元素被插入到 pos 所指向的元素之前,操作后容器 other 变为空
+    //2从other转移 it 所指向的元素到 *this 。元素被插入到 pos 所指向的元素之前。
+    //3从other转移范围 [first, last) 中的元素到 *this 。元素被插入到 pos 所指向的元素之前。若 pos 是范围 [first,last) 中的迭代器则行为未定义。
+    T const& pivot = *(result.begin());
+    auto divide_point = std::partition(input.begin(), input.end(),
+                                       [&](T const& t) {return t < pivot;});
+    //partition在algorithm中 返回为一个正向迭代器
+    //该函数前两个参数 [begin,end) 为范围, 第三个参数为筛选规则
+    //返回的迭代器为两组数据的分界处(第二组数据的第一个元素)
+    std::list<T> low;
+    low.splice(low.end(), input, input.begin(), divide_point);
+    auto low_tmp(quick_sort1(std::move(low)));
+    auto high_tmp(quick_sort1(std::move(input)));
+    result.splice(result.end(), high_tmp);
+    result.splice(result.begin(), low_tmp);
+    return result;
+}
 
 
 //future虽然可移动,但只能有一个实例可以获取结果
@@ -65,5 +91,7 @@ void func2() {
 
 
 int main() {
-    func2();
+    std::list<int> list1 = { 1, 8, 7, 2, 6, 2, 3, 4 };
+    auto list2 = quick_sort1<int>(list1);
+    for (auto i : list2) { std::cout << i << " "; }
 }

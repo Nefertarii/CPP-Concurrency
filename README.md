@@ -11,4 +11,3 @@ Effective C++
 #### 其他:
 https://sg-first.gitbooks.io/cpp-template-tutorial/content/qian_yan.html  (模板元编程)  
 https://zhuanlan.zhihu.com/p/151425608 (软件事务内存STM)  
-
