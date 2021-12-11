@@ -1,37 +1,25 @@
 #include <atomic>
 #include <iostream>
 
-/* atomic 中一些常量
- * memory_order_relaxed
- * 宽松操作,没有同步或顺序制约,仅对此操作要求原子性
- * memory_order_consume
- * 有此内存顺序的加载操作,在其影响的内存位置进行消费操作
- * 当前线程中依赖于当前加载的该值的读或写不能被重排到此加载前
- * 其他释放同一原子变量的线程的对数据依赖变量的写入,为当前线程所可见
- * 在大多数平台上,这只影响到编译器优化
- * memory_order_acquire
- * 有此内存顺序的加载操作,在其影响的内存位置进行获得操作
- * 当前线程中读或写不能被重排到此加载前
- * 其他释放同一原子变量的线程的所有写入,能为当前线程所见
- * memory_order_release
- * 有此内存顺序的存储操作进行释放操作
- * 当前线程中的读或写不能被重排到此存储后
- * 当前线程的所有写入,可见于获得该同一原子变量的其他线程
- * 并且对该原子变量的带依赖写入变得对于其他消费同一原子对象的线程可见
- * memory_order_acq_rel
- * 带此内存顺序的读修改写操作既是获得操作又是释放操作
- * 当前线程的读或写内存不能被重排到此存储前或后
- * 所有释放同一原子变量的线程的写入可见于修改之前,而且修改可见于其他获得同一原子变量的线程
- * memory_order_seq_cst
- * 有此内存顺序的加载操作进行获得操作,存储操作进行释放操作,而读修改写操作进行获得操作和释放操作
- * 再加上存在一个单独全序,其中所有线程以同一顺序观测到所有修改
- */
-
 //atomic中这些类型的所有操作都是原子的,不过也可以用互斥锁来模拟原子操作
 //而标准原子类型的实现也是这样模拟出来的
 //它们(几乎)都有一个is_lock_free()成员函数,
 //这个函数可以查询某原子类型的操作是直接用的原子指令(返回true)
 //还是内部用了一个锁结构(返回false)
+
+/* atomic中定义的6个顺序
+ * memory_order_relaxed 各个CPU读取的值是未定义的,一个CPU在一个线程中修改一个值后,其他CPU不知道
+ * memory_order_seq_cst 可理解为CPU的原子操作都是在一个线程上工作,一个修改后,其他CPU都会更新到新的值
+ * acquire操作(load) —— memory_order_consume, memory_order_acquire
+ * release操作(store) —— memory_order_release
+ * acquire-release操作 —— memory_order_acq_rel (先acquire再做一次release)
+ * 对于fetch_add这样的操作,既要load一下,又要store一下的,就用这个）
+ * 一个原子做了acquire操作,读的是这个原子最后一次release操作修改的值。
+ * 换句话说,要是采用release的方式store一个值,那么其他CPU都会看到这一次的修改。
+ * memory_order_consume 只能保证当前的变量以及此线程中与之有依赖关系的变量,在其他CPU上都更新
+ * 不能保证此线程中此load操作语句之前的其他变量的操作也被其他CPU看到
+ * memory_order_acquire 不仅能保证当前变量的修改被其他CPU看到,也能保证这条语句之前的其他变量的load操作的值也被其他CPU看到
+ */
 
 //除开std::atomic_flag 这个布尔类型不提供is_lock_free()之外
 //其他的类型都可以通过模板std::atomic<>得到原子类型

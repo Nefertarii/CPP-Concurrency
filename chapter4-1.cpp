@@ -89,8 +89,75 @@ void func2() {
 //如果源码中操作A发生在操作B之前,那么A就先行于B发生
 
 
+void foo(int a, int b) {
+    std::cout << "a:" << a << ", b:" << b << "\n";
+}
+void get_num(std::promise<int> x,std::promise<int> y) {
+    static int i = 0;
+    x.set_value(++i);
+    y.set_value(++i);
+}
+void func3() {
+    std::promise<int> P1, P2;
+    auto F1 = P1.get_future();
+    auto F2 = P2.get_future();
+    std::thread T1(get_num, std::move(P1), std::move(P2));
+    T1.detach();
+    sleep(1);
+    int num1 = F1.get();
+    int num2 = F2.get();
+    foo(num1, num2);
+    //据说会根据编译器的不同,生成的汇编码导致函数输出不一样的结果
+    //我还没遇到过,可能现代编译器已经修复了
+}
+
+std::atomic<bool> atomic_x, atomic_y;
+std::atomic<int> atomic_int;
+void write_x() {
+    atomic_x.store(true, std::memory_order_seq_cst);
+    //原子类型的操作可以指定6种模型的中的一种,用来控制同步以及对执行序列的约束
+}
+void write_y() {
+    atomic_y.store(true, std::memory_order_seq_cst);
+}
+void read_x_y() {
+    while (!atomic_x.load(std::memory_order_seq_cst)) { 
+        std::cout << "atomic_x is true now.\n";
+    }
+    if (atomic_y.load(std::memory_order_seq_cst)) { ++atomic_int; }
+}
+void read_y_x() {
+    while (!atomic_y.load(std::memory_order_seq_cst)) {
+        std::cout << "atomic_y is true now.\n";
+    }
+    if (atomic_x.load(std::memory_order_seq_cst)) { ++atomic_int; }
+}
+void func4() {
+    atomic_x = false;
+    atomic_y = false;
+    atomic_int = 0;
+    std::thread T1(write_x);
+    std::thread T2(write_y);
+    std::thread T3(read_x_y);
+    std::thread T4(read_y_x);
+    T1.join();
+    T2.join();
+    T3.join();
+    T4.join();
+    if (atomic_int.load() == 0) { std::cout << "atomic_int still echo 0\n"; }
+    else { std::cout << "atomic_int now echo " << atomic_int.load(); }
+    //任何情况下 int都不能是0,因为不是存储x的操作发生,就是存储y的操作发生。
+    //如果在read_x_then_y中加载y返回false,是因为存储x的操作肯定发生在存储y的操作之前
+    //在这种情况下在read_y_then_x中加载x必定会返回true,因为while循环能保证在某一时刻y是true
+    //因为memory_order_seq_cst的语义需要一个全序将所有操作都标记为memory_order_seq_cst
+    //这就暗示着 加载y并返回false 与 存储y 的操作需要有一个确定的顺序
+    //只有在全序时,当一个线程看到x == true,随后又看到y == false,这就意味着在总序列中存储x的操作发生在存储y的操作之前。
+    //当然,也有可能发生加载x的操作返回false,或强制加载y的操作返回true
+    //这两种情况下,int都等于1,当两个加载操作都返回true,int就等于2
+}
+
 
 
 int main() {
-    func2();
+    func4();
 }
