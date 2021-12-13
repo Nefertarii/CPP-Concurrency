@@ -1,4 +1,6 @@
 #include <iostream>
+#include <assert.h>
+
 int main() {
-    std::cout << "hi" << "\n";
+    assert(false);
 }

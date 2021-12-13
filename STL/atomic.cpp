@@ -7,7 +7,7 @@
 //这个函数可以查询某原子类型的操作是直接用的原子指令(返回true)
 //还是内部用了一个锁结构(返回false)
 
-/* atomic中定义的6个顺序
+/* atomic中定义的顺序
  * memory_order_relaxed 各个CPU读取的值是未定义的,一个CPU在一个线程中修改一个值后,其他CPU不知道
  * memory_order_seq_cst 可理解为CPU的原子操作都是在一个线程上工作,一个修改后,其他CPU都会更新到新的值
  * acquire操作(load) —— memory_order_consume, memory_order_acquire
