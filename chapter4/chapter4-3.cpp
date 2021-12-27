@@ -1,4 +1,4 @@
-#include "headfile.h"
+#include "../headfile.h"
 
 //释放操作序列(内存模型)
 //栅栏

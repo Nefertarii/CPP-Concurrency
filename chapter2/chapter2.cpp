@@ -1,4 +1,4 @@
-#include "headfile.h"
+#include "../headfile.h"
 //数据共享操作,互斥量mutex,锁的操作
 //条件竞争(race condition)情况
 //软件事务内存 STM(Software transactional memory)
@@ -82,6 +82,7 @@ class thread_safe_stack {
 private:
     std::stack<T> data;
     mutable std::mutex mtx;
+    //mutable只能用来修饰类的数据成员,而被mutable修饰的数据成员,可以在const成员函数中修改
 public:
     thread_safe_stack() :data(std::stack<T>()) {}
     thread_safe_stack(const thread_safe_stack& other) {

@@ -1,7 +1,7 @@
 
-#include "headfile.h"
+#include "../headfile.h"
 
-//获取-释放 操作序列(内存模型)
+//获取-释放操作序列(内存模型)
 
 std::atomic<bool> atomic_x, atomic_y;
 std::atomic<int> atomic_int;
