@@ -43,7 +43,7 @@ public:
                 old_id, std::this_thread::get_id())) {
                 hp = &hazard_pointer[i];
                 break;
-            }
+            }//尝试获取风险指针的所有权
         }
         if (!hp) { throw std::runtime_error("No hazard point available."); }
     }
@@ -56,13 +56,13 @@ public:
 std::atomic<void*>& get_hazard_point() {
     thread_local static hazard_owner hazard;
     return hazard.get_point();
-}
+}//创建一个缓存表方便查询
 bool outstanding_hazard_point(void* p) {
     for (int i = 0;i < max_hazard_point;i++) {
         if (hazard_pointer[i].point.load() == p) { return true; }
     }
     return false;
-}
+}//对风险指针进行搜索,空指针即是没有所有者的指针
 template<typename T>
 void do_delete(void* p) { delete static_cast<T*>(p); }
 struct data_to_reclaim {
@@ -86,7 +86,7 @@ void delete_no_hazard_node() {
         else { add_to_reclaim_list(current); }
         current = next;
     }
-}
+}//删除无记录的指针
 
 
 
@@ -123,9 +123,9 @@ private:
     void try_reclaim(node* old_head) {
         if (thread_pop == 1) {
             node* node_t = to_deleted.exchange(nullptr);//通过原子操作删除列表
-            if (!(--thread_pop)) { delete_nodes(node_t); }//计数器为0即可删除 确保没有其他线程在等待访问
-            else if (to_deleted) { chain_pending_nodes(old_head); }//计数器不为0 需要挂在等待删除链表之后
-            delete old_head; //此时引用计数为1即可删除
+            if (!(--thread_pop)) { delete_nodes(node_t); }//计数器为0即可删除 确保没有其他线程正在调用pop
+            else if (to_deleted) { chain_pending_nodes(old_head); }//计数器不为0 则需要添加到删除链表之后等待
+            delete old_head; //此时引用计数为1即可删除 计数器为1表示只有当前线程在使用
         }
         else {
             chain_pending_node(old_head);//引用计数不为1 向等待列表中添加
@@ -142,15 +142,16 @@ public:
         //使用比较/交换操作在返回false时,因为比较失败(例如，head被其他线程锁修改)
         //会使用head中的内容更新new_node->next(第一个参数)的内容
     }
-    std::shared_ptr<T> pop() {
-        //删除节点 读取当前head指针的值,读取head->next,
-        //设置head到head->next,通过索引node返回data数据,删除索引节点
-        ++thread_pop;//计数器
+    //为了保证多线程调用栈时能正确使用,线程调用pop时先放入可删除列表中,直到在没有线程对pop调用时再进行删除
+    //删除节点 读取当前head指针的值,读取head->next
+    //设置head到head->next,通过索引node返回data数据,删除索引节点
+    std::shared_ptr<T> count_pop() {
+        ++thread_pop;//计数器记录调用的线程数量
         node* old_head = head.load();
         while (old_head && !head.compare_exchange_weak(old_head, old_head->next));
         std::shared_ptr<T> res;
         if (old_head) { res.swap(old_head->data); }//回收删除的节点
-        try_reclaim(old_head);//直接提取数据,不拷贝指针
+        try_reclaim(old_head);//直接使用数据,而不拷贝指针
         return res;
     }
     std::shared_ptr<T> hazard_pop() {
@@ -163,6 +164,9 @@ public:
                 hazard_point.store(old_head);
                 old_head = head.load();
             } while (old_head != tmp);
+            //循环内部会对风险指针进行设置,compare_exchange操作失败时会重载old_head,并再次尝试设置风险指针
+            //因为需要在循环内部做一些实际的工作,所以要使用compare_exchange_strong()
+            //当compare_exchange_weak()伪失败后, 风险指针将被重置
         } while (old_head && !head.compare_exchange_strong(old_head, old_head->next));
         //在比较交换失败后再次设置head指针 直到成功将head设置为风险指针
         hazard_point.store(nullptr);//声明完成后即可清除
@@ -172,6 +176,7 @@ public:
             if (outstanding_hazard_point(old_head)) {
                 //检查是否有对风险指针的引用
                 reclaim_later(old_head);
+                //没有,回收
             }
             else {
                 delete old_head;
@@ -182,8 +187,13 @@ public:
         return res;
     }
 };
-//风险指针
+//风险指针(书上说用处不大)
 //当有线程去访问要被(其他线程)删除的对象时,会先设置对这个对象设置风险指针,而后通知其他线程使用这个指针是危险的行为
 //当这个对象不再被需要,那么就可以清除风险指针了
 //当线程想要删除一个对象,就必须检查系统中其他线程是否持有风险指针
 //当没有风险指针时,就可以安全删除对象,否则就必须等待风险指针消失
+
+
+int main() {
+    lock_free_stack<int> stk;
+}

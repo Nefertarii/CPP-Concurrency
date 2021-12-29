@@ -8,7 +8,8 @@
 #### chapter4(C++内存模型 原子操作 栅栏)
 
 也了解了栅栏，如何让执行序列中，对原子类型的操作成对同步。最后，回顾了本章开始的一些例子，了解了原子操作也可以在不同线程上的非原子操作间使用，并进行有序执行。以及了解了高级工具所提供的同步能力)
-#### chapter5(...)
+#### chapter5(线程安全的栈 队列 查询表 链表)
+#### chapter6(...)
 
 #### 其他:
 https://sg-first.gitbooks.io/cpp-template-tutorial/content/qian_yan.html  (模板元编程)  
