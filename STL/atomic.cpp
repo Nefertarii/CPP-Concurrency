@@ -21,17 +21,17 @@
  * memory_order_acquire 不仅能保证当前变量的修改被其他CPU看到,也能保证这条语句之前的其他变量的load操作的值也被其他CPU看到
  */
 
-//除开std::atomic_flag 这个布尔类型不提供is_lock_free()之外
-//其他的类型都可以通过模板std::atomic<>得到原子类型
-//标准原子类型是不能进行拷贝和赋值的,但是可以隐式转化成对应的内置类型,因此还是能赋值
-//每种函数类型的操作都有一个内存排序参数，这个参数可以用来指定存储的顺序。5.3节中，会对存储顺序选项进行详述。现在，只需要知道操作分为三类：
-//Store操作,可选如下顺序
-//memory_order_relaxed, memory_order_release, memory_order_seq_cst
-//Load操作,可选如下顺序
-//memory_order_relaxed, memory_order_consume, memory_order_acquire, memory_order_seq_cst
-//exchange(读-改-写)操作,可选如下顺序
-//memory_order_relaxed, memory_order_consume, memory_order_acquire, 
-//memory_order_release, memory_order_acq_rel, memory_order_seq_cst
+ //除开std::atomic_flag 这个布尔类型不提供is_lock_free()之外
+ //其他的类型都可以通过模板std::atomic<>得到原子类型
+ //标准原子类型是不能进行拷贝和赋值的,但是可以隐式转化成对应的内置类型,因此还是能赋值
+ //每种函数类型的操作都有一个内存排序参数，这个参数可以用来指定存储的顺序。5.3节中，会对存储顺序选项进行详述。现在，只需要知道操作分为三类：
+ //Store操作,可选如下顺序
+ //memory_order_relaxed, memory_order_release, memory_order_seq_cst
+ //Load操作,可选如下顺序
+ //memory_order_relaxed, memory_order_consume, memory_order_acquire, memory_order_seq_cst
+ //exchange(读-改-写)操作,可选如下顺序
+ //memory_order_relaxed, memory_order_consume, memory_order_acquire, 
+ //memory_order_release, memory_order_acq_rel, memory_order_seq_cst
 
 void func1() {
     std::atomic_flag flag = ATOMIC_FLAG_INIT;
@@ -46,6 +46,22 @@ void func1() {
     //销毁
 }
 
+/*
+_Bool atomic_compare_exchange_strong(volatile A* obj, C* expected, C desired );
+_Bool atomic_compare_exchange_weak(volatile A *obj, C* expected, C desired );
+_Bool atomic_compare_exchange_strong_explicit(volatile A* obj, C* expected, C desired,
+                                               memory_order succ, memory_order fail );
+_Bool atomic_compare_exchange_weak_explicit(volatile A *obj, C* expected, C desired,
+                                             memory_order succ, memory_order fail );
+原子地比较 obj 所指向对象与 expected 所指向对象的对象表示(C++20 前)(值表示(C++20 起))
+若它们逐位相等,则以 desired 替换前者(进行读修改写操作),否则将 obj 所指向对象的实际值加载到 *expected （进行加载操作）
+复制如同以 std::memcpy 进行
+obj         指向要比对的原子对象的指针
+expected	指向预期找到原子对象的值的指针
+desired     如果满足预期,则储存该值
+succ        若比较成功则用于读-改-写操作的内存同步顺序,可以是所有内存序
+fail        若比较失败则用于加载操作的内存同步顺序,不能是memory_order_release和memory_order_acq_rel
+*/
 void func2() {
     //atomic_bool的操作比atomic_flag将要更多,同时是无锁的
     std::atomic<bool> atomic_bool;
@@ -65,12 +81,12 @@ void func2() {
     while (!atomic_bool2.compare_exchange_weak(expected, true) && !expected);
     //经历每次循环的时候,期望值都会重新加载,所以当没有其他线程同时修改期望时
     //strong和weak的调用都会在下一次(第二次)成功
-    //compare_exchange_strong()就能保证值返回false。这就能消除对循环的需要
+    //compare_exchange_strong()就能保证值返回false,这就能消除对循环的需要
 }
 
 
 
 
 int main() {
-    
+
 }

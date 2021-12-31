@@ -1,8 +1,6 @@
 #include "../headfile.h"
 //设计并发数据结构时需要考量两方面:一是确保访问安全,二是真正并发访问
 
-
-
 //使用锁的线程安全的栈
 struct empty_stack : std::exception {
     const char* what() const throw() { return "empty stack!"; }
