@@ -8,6 +8,7 @@
 #### chapter4(C++内存模型 原子操作 栅栏)
 #### chapter5(线程安全的栈 队列 查询表 链表)
 #### chapter6(无锁的栈和队列)
+#### chapter7
 
 #### 其他:
 https://sg-first.gitbooks.io/cpp-template-tutorial/content/qian_yan.html  (模板元编程)  
