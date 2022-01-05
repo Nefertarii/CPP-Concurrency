@@ -165,7 +165,7 @@ void func5() {
     }
     std::for_each(threads.begin(), threads.end(), std::mem_fn(&std::thread::join));
     //mem_fn 把成员函数转为函数对象，使用对象指针或对象(引用)进行绑定
-    //与for_each搭配可实现对vector中的所有对象进行操作
+    //for_each对范围中的元素,依次调用用户提供的函数
 }
 
 template<typename Iterator, typename T>

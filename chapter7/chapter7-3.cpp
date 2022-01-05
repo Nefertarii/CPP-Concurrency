@@ -81,14 +81,14 @@ T parallel_accmulate2(Iterator first, Iterator last, T init) {
     for (unsigned long i = 0;i < (num_threads - 1);i++) {
         Iterator block_end = block_start;
         std::advance(block_end, block_size);
-        std::packaged_task<T(Iterator, Iterator)> task(accumulate_block<Iterator, T>());
+        std::packaged_task<T(Iterator, Iterator)> task(accumulate_block2<Iterator, T>());
         futures[i] = task.get_future();
         threads[i] = std::thread(std::move(task), block_start, block_end);
         block_start = block_end;
         //在此处创建任务并从任务中获取期望值,再将需要处理的数据块的开始与结束信息传入线程
         //任务执行时期望值会获取对应的结果或抛出异常
     }
-    T last_result = accumulate_block()(block_start, last);
+    T last_result = accumulate_block2<Iterator, T>()(block_start, last);
     //期望值不能获得一组结果数组,所以需要将最终数据块的结果赋给一个变量进行保存
     std::for_each(threads.begin(), threads.end(), std::mem_fn(&std::thread::join));
     T result = init;
@@ -111,9 +111,9 @@ T parallel_accmulate3(Iterator first, Iterator last, T init) {
     else {
         Iterator mid_point = first;
         std::advance(mid_point, length / 2);
-        std::future<T> first_half_result = std::async(parallel_accmulate<Iterator, T>,
+        std::future<T> first_half_result = std::async(parallel_accmulate3<Iterator, T>,
                                                       first, mid_point, init);
-        T second_half_result = parallel_accumulate(mid_point, last, T());
+        T second_half_result = parallel_accmulate3(mid_point, last, T());
         //通过递归将数据分成两部分,再生成一个异步任务对另外一半数据进行处理
         //async能够保证充分利用硬件线程,也不会产生超额认购,同时也是异常安全的
         //通过调用async产生的期望值,将会在异常传播时被销毁
@@ -123,11 +123,25 @@ T parallel_accmulate3(Iterator first, Iterator last, T init) {
 }
 
 //可扩展性
-//对于任意的多线程程序,运行时的工作线程数量会有所不同
-//应用初始阶段只有一个线程,之后会在这个线程上衍生出新的线程
-//理想状态:每个线程都做着有用的工作,不过这种情况几乎是不可能发生的,线程通常会花时间进行互相等待,或等待IO操作的完成。
-//一种简化的方式就是就是将程序划分成“串行”部分和“并行”部分
-//串行部分是由单线程执行一些工作的地方
-//并行部分是可以让所有可用的处理器一起工作的部分
-//当在多处理系统上运行应用时,并行部分理论上会完成的相当快,因为其工作被划分为多份,放在不同的处理器上执行
-//串行部分则不同,只能一个处理器执行所有工作,这样的(简化)假设下,就可以随着处理数量的增加而增加性能
+/* 对于任意的多线程程序,运行时的工作线程数量会有所不同
+ * 应用初始阶段只有一个线程,之后会在这个线程上衍生出新的线程
+ * 理想状态:每个线程都做着有用的工作,不过这种情况几乎是不可能发生的,线程通常会花时间进行互相等待,或等待IO操作的完成。
+ * 一种简化的方式就是就是将程序划分成“串行”部分和“并行”部分
+ * 串行部分是由单线程执行一些工作的地方
+ * 并行部分是可以让所有可用的处理器一起工作的部分
+ * 当在多处理系统上运行应用时,并行部分理论上会完成的相当快,因为其工作被划分为多份,放在不同的处理器上执行
+ * 串行部分则不同,只能一个处理器执行所有工作,这样的(简化)假设下,就可以随着处理数量的增加而增加性能
+ */
+//Amdahl定律
+/* 代表了处理器并行运算之后效率提升的能力
+ * Time = s + f/p
+ * s为串行部分 f为并行部分 p为核心数
+ * 对代码最大化并发可以保证所有处理器都能用来做有用的工作,
+ * 如果将串行部分的减小,或者减少线程的等待,就可以在多处理器的系统中获取更多的性能收益。
+ * 当能提供更多的数据让系统进行处理,并且让并行部分做最重要的工作,就可以减少串行部分,也能获取更高的性能增益
+ * 当有更多的处理器加入时,是减少一个动作的执行时间,或在给定时间内做更多工作,辨别这两个方面哪个能扩展十分重要
+ */
+
+int main() {
+    
+}
