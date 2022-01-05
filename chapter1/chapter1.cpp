@@ -172,6 +172,7 @@ template<typename Iterator, typename T>
 struct accumulate_block {
     void operator()(Iterator frist, Iterator last, T& result) {
         result = std::accumulate(frist, last, result);
+        //累加元素序列的和,传入为迭代器首尾和累加的初值
     }
 };
 template<typename Iterator, typename T>
@@ -197,6 +198,7 @@ T parallel_accmulate(Iterator first, Iterator last, T init) {
     }
     accumulate_block<Iterator, T>()(block_start, last, results[num_threads - 1]);
     std::for_each(threads.begin(), threads.end(), std::mem_fn(&std::thread::join));
+    return std::accumulate(results.begin(), results.end(), init);
 }
 
 void func6() {
