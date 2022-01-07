@@ -52,17 +52,6 @@ struct accumulate_block2 {
         //结果直接返回不再储存 使用packaged_task和future是线程安全的,可以用来对结果进行转移
     }
 };
-class join_threads {
-private:
-    std::vector<std::thread>& threads;
-public:
-    explicit join_threads(std::vector<std::thread>& threads_) :threads(threads_) {}
-    ~join_threads() {
-        for (int i = 0; i < threads.size(); i++) {
-            if (threads[i].joinable()) { threads[i].join(); }
-        }
-    }
-};
 template <typename Iterator, typename T>
 T parallel_accmulate2(Iterator first, Iterator last, T init) {
     long const length = std::distance(first, last);
