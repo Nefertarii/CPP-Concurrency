@@ -64,6 +64,13 @@ public:
 };
 //无论线程如何离开这段代码,所有线程都可以被汇入
 
+template <typename Iterator, typename T>
+struct accumulate_block {
+    void operator()(Iterator first, Iterator last, T& result) {
+        result = std::accumulate(first, last, result);
+    }
+};
+
 struct empty_stack : std::exception {
     const char* what() const throw() { return "empty stack!"; }
 };
@@ -119,16 +126,18 @@ private:
         return tail;
     }
     std::unique_ptr<node> pop_head() {
-        std::unique_ptr<node> old_head = std::move(head);  
+        std::lock_guard<std::mutex> head_lock(head_mtx);
+        if (head.get() == get_tail()) {
+            return nullptr;
+        }
+        std::unique_ptr<node> old_head = std::move(head);
         head = std::move(old_head->next);
         return old_head;
-        
     }
     std::unique_lock<std::mutex> wait_data() {
         std::unique_lock<std::mutex> head_lk(head_mtx);
         cond.wait(head_lk, [&] { return head.get() != get_tail(); });
         return std::move(head_lk);
-        
     }
     std::unique_ptr<node> wait_pop_head() {
         std::unique_lock<std::mutex> head_lk(wait_data());
@@ -156,7 +165,7 @@ private:
         return pop_head();
     }
 public:
-    thread_safe_queue() :head(new node), tail(head.get()) {};
+    thread_safe_queue() :head(new node), tail(head.get()) {}
     thread_safe_queue(const thread_safe_queue& other) = delete;
     thread_safe_queue& operator=(const thread_safe_queue& other) = delete;
     std::shared_ptr<T> try_pop() {
@@ -164,8 +173,8 @@ public:
         return old_head ? old_head->data : std::shared_ptr<T>();
     }
     bool try_pop(T& value) {
-        std::unique_ptr<node> const old_head = try_pop_head(value);
-        return old_head;
+        std::unique_ptr<node> old_head = try_pop_head(value);
+        return old_head ? true : false;
     }
     std::shared_ptr<T> wait_pop() {
         std::unique_ptr<node> const old_head = wait_pop_head();
