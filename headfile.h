@@ -21,7 +21,7 @@
 #include <algorithm>
 #include <math.h>
 #include <stdio.h>
-
+#include <execution>    //执行策略
 
 using Ulong = unsigned long;
 using Us = std::chrono::microseconds;
