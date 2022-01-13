@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <execution>    //执行策略
 
+
 using Ulong = unsigned long;
 using Us = std::chrono::microseconds;
 using Ms = std::chrono::milliseconds;
@@ -147,7 +148,7 @@ private:
         std::unique_ptr<std::mutex> head_lk(wait_data());
         value = std::move(*head->data);
         return pop_head();
-        
+
     }
     std::unique_ptr<node> try_pop_head() {
         std::lock_guard<std::mutex> head_lk(head_mtx);
